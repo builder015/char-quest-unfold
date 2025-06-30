@@ -1,24 +1,902 @@
+
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>char-quest-unfold</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heroic Adventures - Multilevel Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <meta property="og:title" content="char-quest-unfold" />
-    <meta property="og:description" content="Lovable Generated Project" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+        .game-canvas {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 50%, #228B22 100%);
+            position: relative;
+            transition: background 0.5s ease;
+        }
+
+        .level-2 {
+            background: linear-gradient(to bottom, #FF6B6B 0%, #FFE66D 50%, #FF8E53 100%) !important;
+        }
+
+        .level-3 {
+            background: linear-gradient(to bottom, #4ECDC4 0%, #44A08D 50%, #093637 100%) !important;
+        }
+
+        .character {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            bottom: 100px;
+            left: 100px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .warrior {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            border: 4px solid #8B0000;
+        }
+
+        .mage {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            border: 4px solid #000080;
+        }
+
+        .archer {
+            background: linear-gradient(45deg, #98FB98, #228B22);
+            border: 4px solid #006400;
+        }
+
+        .character::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.8);
+        }
+
+        .warrior::after {
+            content: '⚔️';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+
+        .mage::after {
+            content: '🔮';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+
+        .archer::after {
+            content: '🏹';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+
+        .character.active {
+            transform: scale(1.2);
+            box-shadow: 0 0 25px rgba(255,255,0,0.8);
+        }
+
+        .character.hidden {
+            opacity: 0.3;
+            transform: scale(0.8);
+        }
+
+        .enemy {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #8B0000, #FF0000);
+            border-radius: 50%;
+            border: 3px solid #000;
+            transition: all 0.3s ease;
+        }
+
+        .enemy::after {
+            content: '👹';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+        }
+
+        .collectible {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            border-radius: 50%;
+            border: 2px solid #DAA520;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        .collectible::after {
+            content: '💎';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .platform {
+            position: absolute;
+            background: linear-gradient(45deg, #8B4513, #A0522D);
+            border: 2px solid #654321;
+            border-radius: 5px;
+        }
+
+        .ui-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 200px;
+            z-index: 100;
+        }
+
+        .character-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 100;
+        }
+
+        .char-btn {
+            width: 50px;
+            height: 50px;
+            margin: 5px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .char-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .char-btn.active {
+            box-shadow: 0 0 15px rgba(255,255,0,0.8);
+        }
+
+        .level-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 200;
+        }
+
+        .level-indicator.show {
+            opacity: 1;
+        }
+
+        .victory-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 36px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            z-index: 300;
+        }
+
+        .victory-screen.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .restart-btn {
+            margin-top: 30px;
+            padding: 15px 30px;
+            font-size: 18px;
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .ability-info {
+            font-size: 12px;
+            margin-top: 10px;
+            opacity: 0.8;
+        }
+
+        .projectile {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #FFD700;
+            border-radius: 50%;
+            z-index: 5;
+        }
+
+        @media (max-width: 768px) {
+            .ui-panel, .character-selector {
+                font-size: 14px;
+                padding: 10px;
+            }
+            
+            .character {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .char-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-canvas" id="gameCanvas">
+            <!-- Characters will be dynamically added here -->
+        </div>
+        
+        <div class="ui-panel">
+            <h3>Heroic Adventures</h3>
+            <div>Level: <span id="currentLevel">1</span></div>
+            <div>Score: <span id="score">0</span></div>
+            <div>Lives: <span id="lives">3</span></div>
+            <div class="ability-info" id="abilityInfo">
+                Warrior: Double Jump<br>
+                Mage: Teleport<br>
+                Archer: Shoot Arrows
+            </div>
+        </div>
+        
+        <div class="character-selector">
+            <button class="char-btn warrior active" data-char="warrior" title="Warrior">⚔️</button>
+            <button class="char-btn mage" data-char="mage" title="Mage">🔮</button>
+            <button class="char-btn archer" data-char="archer" title="Archer">🏹</button>
+        </div>
+        
+        <div class="level-indicator" id="levelIndicator">LEVEL 1</div>
+        
+        <div class="victory-screen" id="victoryScreen">
+            <div>🎉 VICTORY! 🎉</div>
+            <div style="font-size: 18px; margin-top: 20px;">You've conquered all levels!</div>
+            <button class="restart-btn" onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.currentLevel = 1;
+                this.maxLevel = 3;
+                this.score = 0;
+                this.lives = 3;
+                this.activeCharacter = 'warrior';
+                this.characters = {};
+                this.enemies = [];
+                this.collectibles = [];
+                this.platforms = [];
+                this.projectiles = [];
+                this.gameRunning = true;
+                this.keys = {};
+                
+                this.characterStats = {
+                    warrior: { speed: 5, jumpHeight: 150, specialCooldown: 0, canDoubleJump: true, hasDoubleJumped: false },
+                    mage: { speed: 4, jumpHeight: 120, specialCooldown: 0, teleportRange: 200 },
+                    archer: { speed: 6, jumpHeight: 130, specialCooldown: 0, arrowSpeed: 8 }
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.createCharacters();
+                this.setupLevel();
+                this.bindEvents();
+                this.gameLoop();
+            }
+
+            createCharacters() {
+                const characterTypes = ['warrior', 'mage', 'archer'];
+                
+                characterTypes.forEach((type, index) => {
+                    const char = document.createElement('div');
+                    char.className = `character ${type} ${index === 0 ? 'active' : 'hidden'}`;
+                    char.style.left = '100px';
+                    char.style.bottom = '100px';
+                    this.canvas.appendChild(char);
+                    
+                    this.characters[type] = {
+                        element: char,
+                        x: 100,
+                        y: window.innerHeight - 160,
+                        velocityX: 0,
+                        velocityY: 0,
+                        onGround: true,
+                        ...this.characterStats[type]
+                    };
+                });
+            }
+
+            setupLevel() {
+                // Clear existing level elements
+                this.enemies = [];
+                this.collectibles = [];
+                this.platforms = [];
+                this.clearDynamicElements();
+                
+                // Update canvas background
+                this.canvas.className = `game-canvas level-${this.currentLevel}`;
+                
+                // Show level indicator
+                this.showLevelIndicator();
+                
+                // Create level-specific content
+                this.createPlatforms();
+                this.createEnemies();
+                this.createCollectibles();
+                
+                // Update UI
+                document.getElementById('currentLevel').textContent = this.currentLevel;
+            }
+
+            createPlatforms() {
+                const levelPlatforms = {
+                    1: [
+                        { x: 200, y: 400, width: 150, height: 20 },
+                        { x: 450, y: 300, width: 150, height: 20 },
+                        { x: 700, y: 200, width: 150, height: 20 }
+                    ],
+                    2: [
+                        { x: 150, y: 450, width: 100, height: 20 },
+                        { x: 350, y: 350, width: 100, height: 20 },
+                        { x: 550, y: 250, width: 100, height: 20 },
+                        { x: 750, y: 150, width: 100, height: 20 },
+                        { x: 950, y: 300, width: 100, height: 20 }
+                    ],
+                    3: [
+                        { x: 100, y: 500, width: 80, height: 20 },
+                        { x: 250, y: 400, width: 80, height: 20 },
+                        { x: 400, y: 300, width: 80, height: 20 },
+                        { x: 550, y: 200, width: 80, height: 20 },
+                        { x: 700, y: 100, width: 80, height: 20 },
+                        { x: 850, y: 200, width: 80, height: 20 },
+                        { x: 1000, y: 350, width: 80, height: 20 }
+                    ]
+                };
+
+                levelPlatforms[this.currentLevel].forEach(platform => {
+                    const platformEl = document.createElement('div');
+                    platformEl.className = 'platform';
+                    platformEl.style.left = platform.x + 'px';
+                    platformEl.style.top = platform.y + 'px';
+                    platformEl.style.width = platform.width + 'px';
+                    platformEl.style.height = platform.height + 'px';
+                    this.canvas.appendChild(platformEl);
+                    this.platforms.push({
+                        element: platformEl,
+                        ...platform
+                    });
+                });
+            }
+
+            createEnemies() {
+                const levelEnemies = {
+                    1: [
+                        { x: 300, y: 350 },
+                        { x: 600, y: 150 }
+                    ],
+                    2: [
+                        { x: 200, y: 400 },
+                        { x: 400, y: 300 },
+                        { x: 800, y: 100 },
+                        { x: 1000, y: 250 }
+                    ],
+                    3: [
+                        { x: 150, y: 450 },
+                        { x: 300, y: 350 },
+                        { x: 450, y: 250 },
+                        { x: 600, y: 150 },
+                        { x: 750, y: 50 },
+                        { x: 900, y: 150 }
+                    ]
+                };
+
+                levelEnemies[this.currentLevel].forEach(enemy => {
+                    const enemyEl = document.createElement('div');
+                    enemyEl.className = 'enemy';
+                    enemyEl.style.left = enemy.x + 'px';
+                    enemyEl.style.top = enemy.y + 'px';
+                    this.canvas.appendChild(enemyEl);
+                    this.enemies.push({
+                        element: enemyEl,
+                        x: enemy.x,
+                        y: enemy.y,
+                        direction: Math.random() > 0.5 ? 1 : -1,
+                        speed: 1 + this.currentLevel * 0.5
+                    });
+                });
+            }
+
+            createCollectibles() {
+                const collectibleCount = 3 + this.currentLevel * 2;
+                
+                for (let i = 0; i < collectibleCount; i++) {
+                    const collectibleEl = document.createElement('div');
+                    collectibleEl.className = 'collectible';
+                    
+                    const x = Math.random() * (window.innerWidth - 100) + 50;
+                    const y = Math.random() * (window.innerHeight - 300) + 50;
+                    
+                    collectibleEl.style.left = x + 'px';
+                    collectibleEl.style.top = y + 'px';
+                    this.canvas.appendChild(collectibleEl);
+                    
+                    this.collectibles.push({
+                        element: collectibleEl,
+                        x: x,
+                        y: y
+                    });
+                }
+            }
+
+            clearDynamicElements() {
+                document.querySelectorAll('.enemy, .collectible, .platform, .projectile').forEach(el => {
+                    el.remove();
+                });
+                this.projectiles = [];
+            }
+
+            showLevelIndicator() {
+                const indicator = document.getElementById('levelIndicator');
+                indicator.textContent = `LEVEL ${this.currentLevel}`;
+                indicator.classList.add('show');
+                
+                setTimeout(() => {
+                    indicator.classList.remove('show');
+                }, 2000);
+            }
+
+            bindEvents() {
+                // Keyboard events
+                document.addEventListener('keydown', (e) => {
+                    this.keys[e.key.toLowerCase()] = true;
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.key.toLowerCase()] = false;
+                });
+
+                // Character selection
+                document.querySelectorAll('.char-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.switchCharacter(btn.dataset.char);
+                    });
+                });
+
+                // Touch events for mobile
+                let touchStartX = 0;
+                let touchStartY = 0;
+
+                document.addEventListener('touchstart', (e) => {
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                });
+
+                document.addEventListener('touchend', (e) => {
+                    const touchEndX = e.changedTouches[0].clientX;
+                    const touchEndY = e.changedTouches[0].clientY;
+                    const deltaX = touchEndX - touchStartX;
+                    const deltaY = touchEndY - touchStartY;
+
+                    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                        if (deltaX > 30) this.keys['d'] = true;
+                        else if (deltaX < -30) this.keys['a'] = true;
+                    } else {
+                        if (deltaY < -30) this.keys[' '] = true;
+                        else if (deltaY > 30) this.keys['s'] = true;
+                    }
+
+                    // Reset keys after a short delay
+                    setTimeout(() => {
+                        this.keys = {};
+                    }, 100);
+                });
+            }
+
+            switchCharacter(characterType) {
+                if (this.activeCharacter === characterType) return;
+
+                // Hide current character
+                this.characters[this.activeCharacter].element.classList.add('hidden');
+                this.characters[this.activeCharacter].element.classList.remove('active');
+
+                // Show new character
+                this.activeCharacter = characterType;
+                this.characters[this.activeCharacter].element.classList.remove('hidden');
+                this.characters[this.activeCharacter].element.classList.add('active');
+
+                // Update UI
+                document.querySelectorAll('.char-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.char === characterType);
+                });
+            }
+
+            handleInput() {
+                const char = this.characters[this.activeCharacter];
+                
+                // Movement
+                if (this.keys['a'] || this.keys['arrowleft']) {
+                    char.velocityX = -char.speed;
+                } else if (this.keys['d'] || this.keys['arrowright']) {
+                    char.velocityX = char.speed;
+                } else {
+                    char.velocityX *= 0.8; // Friction
+                }
+
+                // Jumping
+                if ((this.keys[' '] || this.keys['w'] || this.keys['arrowup']) && char.onGround) {
+                    char.velocityY = -char.jumpHeight;
+                    char.onGround = false;
+                    
+                    if (this.activeCharacter === 'warrior') {
+                        char.hasDoubleJumped = false;
+                    }
+                }
+
+                // Special abilities
+                if (this.keys['e'] && char.specialCooldown <= 0) {
+                    this.useSpecialAbility();
+                }
+
+                // Double jump for warrior
+                if (this.activeCharacter === 'warrior' && this.keys[' '] && !char.onGround && !char.hasDoubleJumped) {
+                    char.velocityY = -char.jumpHeight * 0.8;
+                    char.hasDoubleJumped = true;
+                }
+            }
+
+            useSpecialAbility() {
+                const char = this.characters[this.activeCharacter];
+                
+                switch (this.activeCharacter) {
+                    case 'warrior':
+                        // Double jump handled in handleInput
+                        break;
+                        
+                    case 'mage':
+                        // Teleport
+                        const mouseX = this.keys['d'] ? char.x + char.teleportRange : 
+                                     this.keys['a'] ? char.x - char.teleportRange : char.x;
+                        const mouseY = char.y - 100;
+                        
+                        char.x = Math.max(0, Math.min(window.innerWidth - 60, mouseX));
+                        char.y = Math.max(0, Math.min(window.innerHeight - 160, mouseY));
+                        char.specialCooldown = 120; // 2 seconds at 60fps
+                        break;
+                        
+                    case 'archer':
+                        // Shoot arrow
+                        this.shootArrow();
+                        char.specialCooldown = 30; // 0.5 seconds at 60fps
+                        break;
+                }
+            }
+
+            shootArrow() {
+                const char = this.characters[this.activeCharacter];
+                const arrow = document.createElement('div');
+                arrow.className = 'projectile';
+                arrow.style.left = (char.x + 30) + 'px';
+                arrow.style.top = (char.y + 25) + 'px';
+                this.canvas.appendChild(arrow);
+                
+                this.projectiles.push({
+                    element: arrow,
+                    x: char.x + 30,
+                    y: char.y + 25,
+                    velocityX: char.arrowSpeed,
+                    velocityY: 0
+                });
+            }
+
+            updatePhysics() {
+                Object.values(this.characters).forEach(char => {
+                    // Apply gravity
+                    char.velocityY += 0.8;
+                    
+                    // Update position
+                    char.x += char.velocityX;
+                    char.y += char.velocityY;
+                    
+                    // Boundaries
+                    char.x = Math.max(0, Math.min(window.innerWidth - 60, char.x));
+                    
+                    // Ground collision
+                    if (char.y >= window.innerHeight - 160) {
+                        char.y = window.innerHeight - 160;
+                        char.velocityY = 0;
+                        char.onGround = true;
+                        if (this.activeCharacter === 'warrior') {
+                            char.hasDoubleJumped = false;
+                        }
+                    }
+                    
+                    // Platform collision
+                    this.platforms.forEach(platform => {
+                        if (char.x < platform.x + platform.width &&
+                            char.x + 60 > platform.x &&
+                            char.y < platform.y + platform.height &&
+                            char.y + 60 > platform.y &&
+                            char.velocityY > 0) {
+                            
+                            char.y = platform.y - 60;
+                            char.velocityY = 0;
+                            char.onGround = true;
+                            if (this.activeCharacter === 'warrior') {
+                                char.hasDoubleJumped = false;
+                            }
+                        }
+                    });
+                    
+                    // Update DOM element
+                    char.element.style.left = char.x + 'px';
+                    char.element.style.bottom = (window.innerHeight - char.y - 60) + 'px';
+                    
+                    // Update cooldowns
+                    if (char.specialCooldown > 0) {
+                        char.specialCooldown--;
+                    }
+                });
+            }
+
+            updateEnemies() {
+                this.enemies.forEach(enemy => {
+                    enemy.x += enemy.direction * enemy.speed;
+                    
+                    // Reverse direction at boundaries or randomly
+                    if (enemy.x <= 0 || enemy.x >= window.innerWidth - 50 || Math.random() < 0.01) {
+                        enemy.direction *= -1;
+                    }
+                    
+                    enemy.element.style.left = enemy.x + 'px';
+                });
+            }
+
+            updateProjectiles() {
+                this.projectiles.forEach((projectile, index) => {
+                    projectile.x += projectile.velocityX;
+                    projectile.y += projectile.velocityY;
+                    
+                    projectile.element.style.left = projectile.x + 'px';
+                    projectile.element.style.top = projectile.y + 'px';
+                    
+                    // Remove projectiles that are off screen
+                    if (projectile.x < 0 || projectile.x > window.innerWidth) {
+                        projectile.element.remove();
+                        this.projectiles.splice(index, 1);
+                    }
+                });
+            }
+
+            checkCollisions() {
+                const activeChar = this.characters[this.activeCharacter];
+                
+                // Check enemy collisions
+                this.enemies.forEach((enemy, enemyIndex) => {
+                    if (this.isColliding(activeChar, enemy)) {
+                        this.lives--;
+                        document.getElementById('lives').textContent = this.lives;
+                        
+                        if (this.lives <= 0) {
+                            this.gameOver();
+                        } else {
+                            // Reset character position
+                            activeChar.x = 100;
+                            activeChar.y = window.innerHeight - 160;
+                        }
+                    }
+                    
+                    // Check projectile-enemy collisions
+                    this.projectiles.forEach((projectile, projIndex) => {
+                        if (this.isColliding(projectile, enemy)) {
+                            enemy.element.remove();
+                            projectile.element.remove();
+                            this.enemies.splice(enemyIndex, 1);
+                            this.projectiles.splice(projIndex, 1);
+                            this.score += 50;
+                            document.getElementById('score').textContent = this.score;
+                        }
+                    });
+                });
+                
+                // Check collectible collisions
+                this.collectibles.forEach((collectible, index) => {
+                    if (this.isColliding(activeChar, collectible)) {
+                        collectible.element.remove();
+                        this.collectibles.splice(index, 1);
+                        this.score += 100;
+                        document.getElementById('score').textContent = this.score;
+                    }
+                });
+                
+                // Check level completion
+                if (this.collectibles.length === 0 && this.enemies.length === 0) {
+                    this.nextLevel();
+                }
+            }
+
+            isColliding(obj1, obj2) {
+                const rect1 = {
+                    x: obj1.x,
+                    y: obj1.y,
+                    width: 60,
+                    height: 60
+                };
+                
+                const rect2 = {
+                    x: obj2.x,
+                    y: obj2.y,
+                    width: 50,
+                    height: 50
+                };
+                
+                return rect1.x < rect2.x + rect2.width &&
+                       rect1.x + rect1.width > rect2.x &&
+                       rect1.y < rect2.y + rect2.height &&
+                       rect1.y + rect1.height > rect2.y;
+            }
+
+            nextLevel() {
+                if (this.currentLevel < this.maxLevel) {
+                    this.currentLevel++;
+                    this.setupLevel();
+                } else {
+                    this.victory();
+                }
+            }
+
+            victory() {
+                document.getElementById('victoryScreen').classList.add('show');
+                this.gameRunning = false;
+            }
+
+            gameOver() {
+                alert('Game Over! Try again.');
+                this.restartGame();
+            }
+
+            restartGame() {
+                this.currentLevel = 1;
+                this.score = 0;
+                this.lives = 3;
+                this.gameRunning = true;
+                
+                // Reset UI
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('lives').textContent = this.lives;
+                document.getElementById('victoryScreen').classList.remove('show');
+                
+                // Reset characters
+                Object.values(this.characters).forEach(char => {
+                    char.x = 100;
+                    char.y = window.innerHeight - 160;
+                    char.velocityX = 0;
+                    char.velocityY = 0;
+                    char.onGround = true;
+                    char.specialCooldown = 0;
+                });
+                
+                this.setupLevel();
+            }
+
+            gameLoop() {
+                if (this.gameRunning) {
+                    this.handleInput();
+                    this.updatePhysics();
+                    this.updateEnemies();
+                    this.updateProjectiles();
+                    this.checkCollisions();
+                }
+                
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        }
+
+        // Global function for restart button
+        function restartGame() {
+            if (window.game) {
+                window.game.restartGame();
+            }
+        }
+
+        // Initialize game when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.game = new Game();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.game) {
+                // Adjust character positions if they're out of bounds
+                Object.values(window.game.characters).forEach(char => {
+                    char.x = Math.min(char.x, window.innerWidth - 60);
+                    char.y = Math.min(char.y, window.innerHeight - 160);
+                });
+            }
+        });
+    </script>
+</body>
 </html>
