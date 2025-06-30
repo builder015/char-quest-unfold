@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heroic Adventures - Multilevel Game</title>
+    <title>Animal Run - Simple Multi-Level Game</title>
     <style>
         * {
             margin: 0;
@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 100%);
             overflow: hidden;
             height: 100vh;
         }
@@ -26,147 +26,85 @@
             overflow: hidden;
         }
 
-        .game-canvas {
+        .game-screen {
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 50%, #228B22 100%);
             position: relative;
+            background: linear-gradient(to bottom, #87CEEB 0%, #228B22 70%, #8B4513 100%);
             transition: background 0.5s ease;
         }
 
         .level-2 {
-            background: linear-gradient(to bottom, #FF6B6B 0%, #FFE66D 50%, #FF8E53 100%) !important;
+            background: linear-gradient(to bottom, #FFB347 0%, #FF6B6B 70%, #8B4513 100%) !important;
         }
 
         .level-3 {
-            background: linear-gradient(to bottom, #4ECDC4 0%, #44A08D 50%, #093637 100%) !important;
+            background: linear-gradient(to bottom, #9370DB 0%, #4B0082 70%, #2F4F4F 100%) !important;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: #8B4513;
+            border-top: 3px solid #654321;
         }
 
         .character {
             position: absolute;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
+            width: 80px;
+            height: 80px;
             bottom: 100px;
             left: 100px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-size: 60px;
+            transition: bottom 0.3s ease;
             z-index: 10;
         }
 
-        .warrior {
-            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
-            border: 4px solid #8B0000;
+        .character.jumping {
+            bottom: 200px;
         }
 
-        .mage {
-            background: linear-gradient(45deg, #4ECDC4, #44A08D);
-            border: 4px solid #000080;
-        }
-
-        .archer {
-            background: linear-gradient(45deg, #98FB98, #228B22);
-            border: 4px solid #006400;
-        }
-
-        .character::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.8);
-        }
-
-        .warrior::after {
-            content: '⚔️';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 20px;
-        }
-
-        .mage::after {
-            content: '🔮';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 20px;
-        }
-
-        .archer::after {
-            content: '🏹';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 20px;
-        }
-
-        .character.active {
-            transform: scale(1.2);
-            box-shadow: 0 0 25px rgba(255,255,0,0.8);
-        }
-
-        .character.hidden {
-            opacity: 0.3;
-            transform: scale(0.8);
-        }
-
-        .enemy {
+        .obstacle {
             position: absolute;
             width: 50px;
             height: 50px;
-            background: linear-gradient(45deg, #8B0000, #FF0000);
-            border-radius: 50%;
-            border: 3px solid #000;
-            transition: all 0.3s ease;
+            bottom: 100px;
+            font-size: 40px;
+            animation: moveLeft 2s linear infinite;
         }
 
-        .enemy::after {
-            content: '👹';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 18px;
+        .fast-obstacle {
+            animation: moveLeft 1.5s linear infinite;
         }
 
-        .collectible {
+        .super-fast-obstacle {
+            animation: moveLeft 1s linear infinite;
+        }
+
+        @keyframes moveLeft {
+            from {
+                right: -50px;
+            }
+            to {
+                right: 100vw;
+            }
+        }
+
+        .coin {
             position: absolute;
             width: 30px;
             height: 30px;
-            background: linear-gradient(45deg, #FFD700, #FFA500);
-            border-radius: 50%;
-            border: 2px solid #DAA520;
-            animation: float 2s ease-in-out infinite;
-        }
-
-        .collectible::after {
-            content: '💎';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 14px;
+            bottom: 130px;
+            font-size: 25px;
+            animation: moveLeft 2s linear infinite, float 0.5s ease-in-out infinite alternate;
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .platform {
-            position: absolute;
-            background: linear-gradient(45deg, #8B4513, #A0522D);
-            border: 2px solid #654321;
-            border-radius: 5px;
+            from { transform: translateY(0px); }
+            to { transform: translateY(-10px); }
         }
 
         .ui-panel {
@@ -176,8 +114,8 @@
             background: rgba(0,0,0,0.8);
             color: white;
             padding: 20px;
-            border-radius: 10px;
-            min-width: 200px;
+            border-radius: 15px;
+            font-size: 18px;
             z-index: 100;
         }
 
@@ -187,18 +125,19 @@
             right: 20px;
             background: rgba(0,0,0,0.8);
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 15px;
             z-index: 100;
         }
 
         .char-btn {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             margin: 5px;
-            border: none;
-            border-radius: 50%;
+            border: 3px solid transparent;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.2);
             cursor: pointer;
-            font-size: 20px;
+            font-size: 40px;
             transition: all 0.3s ease;
         }
 
@@ -207,10 +146,26 @@
         }
 
         .char-btn.active {
-            box-shadow: 0 0 15px rgba(255,255,0,0.8);
+            border-color: #FFD700;
+            background: rgba(255,215,0,0.3);
+            transform: scale(1.1);
         }
 
-        .level-indicator {
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .level-transition {
             position: fixed;
             top: 50%;
             left: 50%;
@@ -218,17 +173,17 @@
             font-size: 48px;
             font-weight: bold;
             color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
             opacity: 0;
             transition: opacity 0.5s ease;
             z-index: 200;
         }
 
-        .level-indicator.show {
+        .level-transition.show {
             opacity: 1;
         }
 
-        .victory-screen {
+        .game-over-screen {
             position: fixed;
             top: 0;
             left: 0;
@@ -247,7 +202,7 @@
             z-index: 300;
         }
 
-        .victory-screen.show {
+        .game-over-screen.show {
             opacity: 1;
             pointer-events: all;
         }
@@ -255,8 +210,8 @@
         .restart-btn {
             margin-top: 30px;
             padding: 15px 30px;
-            font-size: 18px;
-            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            font-size: 20px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
             border: none;
             border-radius: 25px;
@@ -268,19 +223,19 @@
             transform: scale(1.1);
         }
 
-        .ability-info {
-            font-size: 12px;
-            margin-top: 10px;
-            opacity: 0.8;
-        }
-
-        .projectile {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #FFD700;
-            border-radius: 50%;
-            z-index: 5;
+        .pause-btn {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            font-size: 16px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            z-index: 100;
         }
 
         @media (max-width: 768px) {
@@ -290,253 +245,114 @@
             }
             
             .character {
-                width: 50px;
-                height: 50px;
+                width: 60px;
+                height: 60px;
+                font-size: 45px;
             }
             
             .char-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
+                width: 50px;
+                height: 50px;
+                font-size: 30px;
+            }
+            
+            .instructions {
+                font-size: 14px;
+                padding: 10px 15px;
             }
         }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <div class="game-canvas" id="gameCanvas">
-            <!-- Characters will be dynamically added here -->
+        <div class="game-screen" id="gameScreen">
+            <div class="ground"></div>
+            <div class="character" id="character">🦕</div>
         </div>
         
         <div class="ui-panel">
-            <h3>Heroic Adventures</h3>
+            <div><strong>Animal Run</strong></div>
             <div>Level: <span id="currentLevel">1</span></div>
             <div>Score: <span id="score">0</span></div>
             <div>Lives: <span id="lives">3</span></div>
-            <div class="ability-info" id="abilityInfo">
-                Warrior: Double Jump<br>
-                Mage: Teleport<br>
-                Archer: Shoot Arrows
-            </div>
         </div>
         
         <div class="character-selector">
-            <button class="char-btn warrior active" data-char="warrior" title="Warrior">⚔️</button>
-            <button class="char-btn mage" data-char="mage" title="Mage">🔮</button>
-            <button class="char-btn archer" data-char="archer" title="Archer">🏹</button>
+            <button class="char-btn active" data-char="dino" title="Dino">🦕</button>
+            <button class="char-btn" data-char="tiger" title="Tiger">🐅</button>
+            <button class="char-btn" data-char="dog" title="Dog">🐕</button>
         </div>
         
-        <div class="level-indicator" id="levelIndicator">LEVEL 1</div>
+        <button class="pause-btn" id="pauseBtn">⏸️ PAUSE</button>
         
-        <div class="victory-screen" id="victoryScreen">
-            <div>🎉 VICTORY! 🎉</div>
-            <div style="font-size: 18px; margin-top: 20px;">You've conquered all levels!</div>
-            <button class="restart-btn" onclick="restartGame()">Play Again</button>
+        <div class="instructions">
+            Press SPACEBAR or click to JUMP • Avoid obstacles • Collect coins
+        </div>
+        
+        <div class="level-transition" id="levelTransition">LEVEL 1</div>
+        
+        <div class="game-over-screen" id="gameOverScreen">
+            <div id="gameOverText">🎉 GAME COMPLETE! 🎉</div>
+            <div style="font-size: 18px; margin-top: 20px;" id="finalScore">Final Score: 0</div>
+            <button class="restart-btn" onclick="restartGame()">🔄 Play Again</button>
         </div>
     </div>
 
     <script>
-        class Game {
+        class AnimalRunGame {
             constructor() {
-                this.canvas = document.getElementById('gameCanvas');
+                this.gameScreen = document.getElementById('gameScreen');
+                this.character = document.getElementById('character');
                 this.currentLevel = 1;
                 this.maxLevel = 3;
                 this.score = 0;
                 this.lives = 3;
-                this.activeCharacter = 'warrior';
-                this.characters = {};
-                this.enemies = [];
-                this.collectibles = [];
-                this.platforms = [];
-                this.projectiles = [];
-                this.gameRunning = true;
-                this.keys = {};
+                this.activeCharacter = 'dino';
+                this.isJumping = false;
+                this.isGameRunning = true;
+                this.isPaused = false;
+                this.obstacles = [];
+                this.coins = [];
+                this.gameSpeed = 2000; // milliseconds between obstacles
+                this.obstacleTimer = null;
+                this.coinTimer = null;
                 
-                this.characterStats = {
-                    warrior: { speed: 5, jumpHeight: 150, specialCooldown: 0, canDoubleJump: true, hasDoubleJumped: false },
-                    mage: { speed: 4, jumpHeight: 120, specialCooldown: 0, teleportRange: 200 },
-                    archer: { speed: 6, jumpHeight: 130, specialCooldown: 0, arrowSpeed: 8 }
+                this.characters = {
+                    dino: '🦕',
+                    tiger: '🐅',
+                    dog: '🐕'
                 };
-
+                
+                this.obstacleTypes = ['🌵', '🪨', '🔥'];
+                
                 this.init();
             }
 
             init() {
-                this.createCharacters();
-                this.setupLevel();
                 this.bindEvents();
+                this.startLevel();
                 this.gameLoop();
             }
 
-            createCharacters() {
-                const characterTypes = ['warrior', 'mage', 'archer'];
-                
-                characterTypes.forEach((type, index) => {
-                    const char = document.createElement('div');
-                    char.className = `character ${type} ${index === 0 ? 'active' : 'hidden'}`;
-                    char.style.left = '100px';
-                    char.style.bottom = '100px';
-                    this.canvas.appendChild(char);
-                    
-                    this.characters[type] = {
-                        element: char,
-                        x: 100,
-                        y: window.innerHeight - 160,
-                        velocityX: 0,
-                        velocityY: 0,
-                        onGround: true,
-                        ...this.characterStats[type]
-                    };
-                });
-            }
-
-            setupLevel() {
-                // Clear existing level elements
-                this.enemies = [];
-                this.collectibles = [];
-                this.platforms = [];
-                this.clearDynamicElements();
-                
-                // Update canvas background
-                this.canvas.className = `game-canvas level-${this.currentLevel}`;
-                
-                // Show level indicator
-                this.showLevelIndicator();
-                
-                // Create level-specific content
-                this.createPlatforms();
-                this.createEnemies();
-                this.createCollectibles();
-                
-                // Update UI
-                document.getElementById('currentLevel').textContent = this.currentLevel;
-            }
-
-            createPlatforms() {
-                const levelPlatforms = {
-                    1: [
-                        { x: 200, y: 400, width: 150, height: 20 },
-                        { x: 450, y: 300, width: 150, height: 20 },
-                        { x: 700, y: 200, width: 150, height: 20 }
-                    ],
-                    2: [
-                        { x: 150, y: 450, width: 100, height: 20 },
-                        { x: 350, y: 350, width: 100, height: 20 },
-                        { x: 550, y: 250, width: 100, height: 20 },
-                        { x: 750, y: 150, width: 100, height: 20 },
-                        { x: 950, y: 300, width: 100, height: 20 }
-                    ],
-                    3: [
-                        { x: 100, y: 500, width: 80, height: 20 },
-                        { x: 250, y: 400, width: 80, height: 20 },
-                        { x: 400, y: 300, width: 80, height: 20 },
-                        { x: 550, y: 200, width: 80, height: 20 },
-                        { x: 700, y: 100, width: 80, height: 20 },
-                        { x: 850, y: 200, width: 80, height: 20 },
-                        { x: 1000, y: 350, width: 80, height: 20 }
-                    ]
-                };
-
-                levelPlatforms[this.currentLevel].forEach(platform => {
-                    const platformEl = document.createElement('div');
-                    platformEl.className = 'platform';
-                    platformEl.style.left = platform.x + 'px';
-                    platformEl.style.top = platform.y + 'px';
-                    platformEl.style.width = platform.width + 'px';
-                    platformEl.style.height = platform.height + 'px';
-                    this.canvas.appendChild(platformEl);
-                    this.platforms.push({
-                        element: platformEl,
-                        ...platform
-                    });
-                });
-            }
-
-            createEnemies() {
-                const levelEnemies = {
-                    1: [
-                        { x: 300, y: 350 },
-                        { x: 600, y: 150 }
-                    ],
-                    2: [
-                        { x: 200, y: 400 },
-                        { x: 400, y: 300 },
-                        { x: 800, y: 100 },
-                        { x: 1000, y: 250 }
-                    ],
-                    3: [
-                        { x: 150, y: 450 },
-                        { x: 300, y: 350 },
-                        { x: 450, y: 250 },
-                        { x: 600, y: 150 },
-                        { x: 750, y: 50 },
-                        { x: 900, y: 150 }
-                    ]
-                };
-
-                levelEnemies[this.currentLevel].forEach(enemy => {
-                    const enemyEl = document.createElement('div');
-                    enemyEl.className = 'enemy';
-                    enemyEl.style.left = enemy.x + 'px';
-                    enemyEl.style.top = enemy.y + 'px';
-                    this.canvas.appendChild(enemyEl);
-                    this.enemies.push({
-                        element: enemyEl,
-                        x: enemy.x,
-                        y: enemy.y,
-                        direction: Math.random() > 0.5 ? 1 : -1,
-                        speed: 1 + this.currentLevel * 0.5
-                    });
-                });
-            }
-
-            createCollectibles() {
-                const collectibleCount = 3 + this.currentLevel * 2;
-                
-                for (let i = 0; i < collectibleCount; i++) {
-                    const collectibleEl = document.createElement('div');
-                    collectibleEl.className = 'collectible';
-                    
-                    const x = Math.random() * (window.innerWidth - 100) + 50;
-                    const y = Math.random() * (window.innerHeight - 300) + 50;
-                    
-                    collectibleEl.style.left = x + 'px';
-                    collectibleEl.style.top = y + 'px';
-                    this.canvas.appendChild(collectibleEl);
-                    
-                    this.collectibles.push({
-                        element: collectibleEl,
-                        x: x,
-                        y: y
-                    });
-                }
-            }
-
-            clearDynamicElements() {
-                document.querySelectorAll('.enemy, .collectible, .platform, .projectile').forEach(el => {
-                    el.remove();
-                });
-                this.projectiles = [];
-            }
-
-            showLevelIndicator() {
-                const indicator = document.getElementById('levelIndicator');
-                indicator.textContent = `LEVEL ${this.currentLevel}`;
-                indicator.classList.add('show');
-                
-                setTimeout(() => {
-                    indicator.classList.remove('show');
-                }, 2000);
-            }
-
             bindEvents() {
-                // Keyboard events
+                // Jump controls
                 document.addEventListener('keydown', (e) => {
-                    this.keys[e.key.toLowerCase()] = true;
+                    if (e.code === 'Space' || e.key === ' ') {
+                        e.preventDefault();
+                        this.jump();
+                    }
+                    if (e.key === 'p' || e.key === 'P') {
+                        this.togglePause();
+                    }
                 });
 
-                document.addEventListener('keyup', (e) => {
-                    this.keys[e.key.toLowerCase()] = false;
+                // Click/touch to jump
+                document.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('char-btn') && 
+                        !e.target.classList.contains('restart-btn') &&
+                        !e.target.classList.contains('pause-btn')) {
+                        this.jump();
+                    }
                 });
 
                 // Character selection
@@ -546,328 +362,280 @@
                     });
                 });
 
-                // Touch events for mobile
-                let touchStartX = 0;
-                let touchStartY = 0;
+                // Pause button
+                document.getElementById('pauseBtn').addEventListener('click', () => {
+                    this.togglePause();
+                });
 
+                // Touch events for mobile
+                let touchStartY = 0;
                 document.addEventListener('touchstart', (e) => {
-                    touchStartX = e.touches[0].clientX;
                     touchStartY = e.touches[0].clientY;
                 });
 
                 document.addEventListener('touchend', (e) => {
-                    const touchEndX = e.changedTouches[0].clientX;
                     const touchEndY = e.changedTouches[0].clientY;
-                    const deltaX = touchEndX - touchStartX;
-                    const deltaY = touchEndY - touchStartY;
-
-                    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                        if (deltaX > 30) this.keys['d'] = true;
-                        else if (deltaX < -30) this.keys['a'] = true;
-                    } else {
-                        if (deltaY < -30) this.keys[' '] = true;
-                        else if (deltaY > 30) this.keys['s'] = true;
+                    const deltaY = touchStartY - touchEndY;
+                    
+                    if (deltaY > 30) { // Swipe up
+                        this.jump();
                     }
-
-                    // Reset keys after a short delay
-                    setTimeout(() => {
-                        this.keys = {};
-                    }, 100);
                 });
+            }
+
+            jump() {
+                if (!this.isJumping && this.isGameRunning && !this.isPaused) {
+                    this.isJumping = true;
+                    this.character.classList.add('jumping');
+                    
+                    setTimeout(() => {
+                        this.character.classList.remove('jumping');
+                        this.isJumping = false;
+                    }, 600);
+                }
             }
 
             switchCharacter(characterType) {
                 if (this.activeCharacter === characterType) return;
-
-                // Hide current character
-                this.characters[this.activeCharacter].element.classList.add('hidden');
-                this.characters[this.activeCharacter].element.classList.remove('active');
-
-                // Show new character
+                
                 this.activeCharacter = characterType;
-                this.characters[this.activeCharacter].element.classList.remove('hidden');
-                this.characters[this.activeCharacter].element.classList.add('active');
-
+                this.character.textContent = this.characters[characterType];
+                
                 // Update UI
                 document.querySelectorAll('.char-btn').forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.char === characterType);
                 });
             }
 
-            handleInput() {
-                const char = this.characters[this.activeCharacter];
+            startLevel() {
+                // Clear existing obstacles and coins
+                this.clearGameElements();
                 
-                // Movement
-                if (this.keys['a'] || this.keys['arrowleft']) {
-                    char.velocityX = -char.speed;
-                } else if (this.keys['d'] || this.keys['arrowright']) {
-                    char.velocityX = char.speed;
-                } else {
-                    char.velocityX *= 0.8; // Friction
-                }
-
-                // Jumping
-                if ((this.keys[' '] || this.keys['w'] || this.keys['arrowup']) && char.onGround) {
-                    char.velocityY = -char.jumpHeight;
-                    char.onGround = false;
-                    
-                    if (this.activeCharacter === 'warrior') {
-                        char.hasDoubleJumped = false;
+                // Update level display
+                document.getElementById('currentLevel').textContent = this.currentLevel;
+                
+                // Show level transition
+                this.showLevelTransition();
+                
+                // Update background based on level
+                this.gameScreen.className = `game-screen level-${this.currentLevel}`;
+                
+                // Adjust game speed based on level
+                this.gameSpeed = Math.max(800, 2000 - (this.currentLevel - 1) * 400);
+                
+                // Start spawning obstacles and coins
+                setTimeout(() => {
+                    if (this.isGameRunning) {
+                        this.startObstacleSpawning();
+                        this.startCoinSpawning();
                     }
-                }
-
-                // Special abilities
-                if (this.keys['e'] && char.specialCooldown <= 0) {
-                    this.useSpecialAbility();
-                }
-
-                // Double jump for warrior
-                if (this.activeCharacter === 'warrior' && this.keys[' '] && !char.onGround && !char.hasDoubleJumped) {
-                    char.velocityY = -char.jumpHeight * 0.8;
-                    char.hasDoubleJumped = true;
-                }
+                }, 2000);
             }
 
-            useSpecialAbility() {
-                const char = this.characters[this.activeCharacter];
+            showLevelTransition() {
+                const transition = document.getElementById('levelTransition');
+                transition.textContent = `LEVEL ${this.currentLevel}`;
+                transition.classList.add('show');
                 
-                switch (this.activeCharacter) {
-                    case 'warrior':
-                        // Double jump handled in handleInput
-                        break;
-                        
-                    case 'mage':
-                        // Teleport
-                        const mouseX = this.keys['d'] ? char.x + char.teleportRange : 
-                                     this.keys['a'] ? char.x - char.teleportRange : char.x;
-                        const mouseY = char.y - 100;
-                        
-                        char.x = Math.max(0, Math.min(window.innerWidth - 60, mouseX));
-                        char.y = Math.max(0, Math.min(window.innerHeight - 160, mouseY));
-                        char.specialCooldown = 120; // 2 seconds at 60fps
-                        break;
-                        
-                    case 'archer':
-                        // Shoot arrow
-                        this.shootArrow();
-                        char.specialCooldown = 30; // 0.5 seconds at 60fps
-                        break;
+                setTimeout(() => {
+                    transition.classList.remove('show');
+                }, 2000);
+            }
+
+            startObstacleSpawning() {
+                if (this.obstacleTimer) {
+                    clearInterval(this.obstacleTimer);
                 }
-            }
-
-            shootArrow() {
-                const char = this.characters[this.activeCharacter];
-                const arrow = document.createElement('div');
-                arrow.className = 'projectile';
-                arrow.style.left = (char.x + 30) + 'px';
-                arrow.style.top = (char.y + 25) + 'px';
-                this.canvas.appendChild(arrow);
                 
-                this.projectiles.push({
-                    element: arrow,
-                    x: char.x + 30,
-                    y: char.y + 25,
-                    velocityX: char.arrowSpeed,
-                    velocityY: 0
-                });
+                this.obstacleTimer = setInterval(() => {
+                    if (this.isGameRunning && !this.isPaused) {
+                        this.spawnObstacle();
+                    }
+                }, this.gameSpeed);
             }
 
-            updatePhysics() {
-                Object.values(this.characters).forEach(char => {
-                    // Apply gravity
-                    char.velocityY += 0.8;
+            startCoinSpawning() {
+                if (this.coinTimer) {
+                    clearInterval(this.coinTimer);
+                }
+                
+                this.coinTimer = setInterval(() => {
+                    if (this.isGameRunning && !this.isPaused) {
+                        this.spawnCoin();
+                    }
+                }, this.gameSpeed * 1.5);
+            }
+
+            spawnObstacle() {
+                const obstacle = document.createElement('div');
+                obstacle.className = `obstacle ${this.currentLevel > 2 ? 'super-fast-obstacle' : this.currentLevel > 1 ? 'fast-obstacle' : ''}`;
+                obstacle.textContent = this.obstacleTypes[Math.floor(Math.random() * this.obstacleTypes.length)];
+                obstacle.style.right = '-50px';
+                
+                this.gameScreen.appendChild(obstacle);
+                this.obstacles.push(obstacle);
+                
+                // Remove obstacle after animation
+                setTimeout(() => {
+                    if (obstacle && obstacle.parentNode) {
+                        obstacle.remove();
+                        this.obstacles = this.obstacles.filter(obs => obs !== obstacle);
+                    }
+                }, this.currentLevel > 2 ? 1000 : this.currentLevel > 1 ? 1500 : 2000);
+            }
+
+            spawnCoin() {
+                if (Math.random() < 0.7) { // 70% chance to spawn coin
+                    const coin = document.createElement('div');
+                    coin.className = 'coin';
+                    coin.textContent = '🪙';
+                    coin.style.right = '-30px';
                     
-                    // Update position
-                    char.x += char.velocityX;
-                    char.y += char.velocityY;
+                    this.gameScreen.appendChild(coin);
+                    this.coins.push(coin);
                     
-                    // Boundaries
-                    char.x = Math.max(0, Math.min(window.innerWidth - 60, char.x));
-                    
-                    // Ground collision
-                    if (char.y >= window.innerHeight - 160) {
-                        char.y = window.innerHeight - 160;
-                        char.velocityY = 0;
-                        char.onGround = true;
-                        if (this.activeCharacter === 'warrior') {
-                            char.hasDoubleJumped = false;
+                    // Remove coin after animation
+                    setTimeout(() => {
+                        if (coin && coin.parentNode) {
+                            coin.remove();
+                            this.coins = this.coins.filter(c => c !== coin);
                         }
-                    }
-                    
-                    // Platform collision
-                    this.platforms.forEach(platform => {
-                        if (char.x < platform.x + platform.width &&
-                            char.x + 60 > platform.x &&
-                            char.y < platform.y + platform.height &&
-                            char.y + 60 > platform.y &&
-                            char.velocityY > 0) {
-                            
-                            char.y = platform.y - 60;
-                            char.velocityY = 0;
-                            char.onGround = true;
-                            if (this.activeCharacter === 'warrior') {
-                                char.hasDoubleJumped = false;
-                            }
-                        }
-                    });
-                    
-                    // Update DOM element
-                    char.element.style.left = char.x + 'px';
-                    char.element.style.bottom = (window.innerHeight - char.y - 60) + 'px';
-                    
-                    // Update cooldowns
-                    if (char.specialCooldown > 0) {
-                        char.specialCooldown--;
-                    }
-                });
-            }
-
-            updateEnemies() {
-                this.enemies.forEach(enemy => {
-                    enemy.x += enemy.direction * enemy.speed;
-                    
-                    // Reverse direction at boundaries or randomly
-                    if (enemy.x <= 0 || enemy.x >= window.innerWidth - 50 || Math.random() < 0.01) {
-                        enemy.direction *= -1;
-                    }
-                    
-                    enemy.element.style.left = enemy.x + 'px';
-                });
-            }
-
-            updateProjectiles() {
-                this.projectiles.forEach((projectile, index) => {
-                    projectile.x += projectile.velocityX;
-                    projectile.y += projectile.velocityY;
-                    
-                    projectile.element.style.left = projectile.x + 'px';
-                    projectile.element.style.top = projectile.y + 'px';
-                    
-                    // Remove projectiles that are off screen
-                    if (projectile.x < 0 || projectile.x > window.innerWidth) {
-                        projectile.element.remove();
-                        this.projectiles.splice(index, 1);
-                    }
-                });
+                    }, 2000);
+                }
             }
 
             checkCollisions() {
-                const activeChar = this.characters[this.activeCharacter];
+                const charRect = this.character.getBoundingClientRect();
                 
-                // Check enemy collisions
-                this.enemies.forEach((enemy, enemyIndex) => {
-                    if (this.isColliding(activeChar, enemy)) {
-                        this.lives--;
-                        document.getElementById('lives').textContent = this.lives;
-                        
-                        if (this.lives <= 0) {
-                            this.gameOver();
-                        } else {
-                            // Reset character position
-                            activeChar.x = 100;
-                            activeChar.y = window.innerHeight - 160;
-                        }
-                    }
+                // Check obstacle collisions
+                this.obstacles.forEach((obstacle, index) => {
+                    const obstacleRect = obstacle.getBoundingClientRect();
                     
-                    // Check projectile-enemy collisions
-                    this.projectiles.forEach((projectile, projIndex) => {
-                        if (this.isColliding(projectile, enemy)) {
-                            enemy.element.remove();
-                            projectile.element.remove();
-                            this.enemies.splice(enemyIndex, 1);
-                            this.projectiles.splice(projIndex, 1);
-                            this.score += 50;
-                            document.getElementById('score').textContent = this.score;
-                        }
-                    });
-                });
-                
-                // Check collectible collisions
-                this.collectibles.forEach((collectible, index) => {
-                    if (this.isColliding(activeChar, collectible)) {
-                        collectible.element.remove();
-                        this.collectibles.splice(index, 1);
-                        this.score += 100;
-                        document.getElementById('score').textContent = this.score;
+                    if (this.isColliding(charRect, obstacleRect)) {
+                        this.hitObstacle();
+                        obstacle.remove();
+                        this.obstacles.splice(index, 1);
                     }
                 });
                 
-                // Check level completion
-                if (this.collectibles.length === 0 && this.enemies.length === 0) {
+                // Check coin collisions
+                this.coins.forEach((coin, index) => {
+                    const coinRect = coin.getBoundingClientRect();
+                    
+                    if (this.isColliding(charRect, coinRect)) {
+                        this.collectCoin();
+                        coin.remove();
+                        this.coins.splice(index, 1);
+                    }
+                });
+            }
+
+            isColliding(rect1, rect2) {
+                return !(rect1.right < rect2.left || 
+                        rect1.left > rect2.right || 
+                        rect1.bottom < rect2.top || 
+                        rect1.top > rect2.bottom);
+            }
+
+            hitObstacle() {
+                this.lives--;
+                document.getElementById('lives').textContent = this.lives;
+                
+                // Flash character red
+                this.character.style.filter = 'hue-rotate(0deg) saturate(2) brightness(1.5)';
+                setTimeout(() => {
+                    this.character.style.filter = 'none';
+                }, 200);
+                
+                if (this.lives <= 0) {
+                    this.gameOver();
+                }
+            }
+
+            collectCoin() {
+                this.score += 10 * this.currentLevel;
+                document.getElementById('score').textContent = this.score;
+                
+                // Flash character gold
+                this.character.style.filter = 'hue-rotate(45deg) saturate(2) brightness(1.5)';
+                setTimeout(() => {
+                    this.character.style.filter = 'none';
+                }, 200);
+                
+                // Check for level completion (every 50 points per level)
+                if (this.score >= this.currentLevel * 50 && this.currentLevel < this.maxLevel) {
                     this.nextLevel();
                 }
             }
 
-            isColliding(obj1, obj2) {
-                const rect1 = {
-                    x: obj1.x,
-                    y: obj1.y,
-                    width: 60,
-                    height: 60
-                };
-                
-                const rect2 = {
-                    x: obj2.x,
-                    y: obj2.y,
-                    width: 50,
-                    height: 50
-                };
-                
-                return rect1.x < rect2.x + rect2.width &&
-                       rect1.x + rect1.width > rect2.x &&
-                       rect1.y < rect2.y + rect2.height &&
-                       rect1.y + rect1.height > rect2.y;
-            }
-
             nextLevel() {
-                if (this.currentLevel < this.maxLevel) {
-                    this.currentLevel++;
-                    this.setupLevel();
-                } else {
-                    this.victory();
-                }
+                this.currentLevel++;
+                this.clearGameElements();
+                this.startLevel();
             }
 
-            victory() {
-                document.getElementById('victoryScreen').classList.add('show');
-                this.gameRunning = false;
+            clearGameElements() {
+                // Clear timers
+                if (this.obstacleTimer) {
+                    clearInterval(this.obstacleTimer);
+                }
+                if (this.coinTimer) {
+                    clearInterval(this.coinTimer);
+                }
+                
+                // Remove all obstacles and coins
+                this.obstacles.forEach(obstacle => obstacle.remove());
+                this.coins.forEach(coin => coin.remove());
+                this.obstacles = [];
+                this.coins = [];
+            }
+
+            togglePause() {
+                this.isPaused = !this.isPaused;
+                const pauseBtn = document.getElementById('pauseBtn');
+                pauseBtn.textContent = this.isPaused ? '▶️ RESUME' : '⏸️ PAUSE';
             }
 
             gameOver() {
-                alert('Game Over! Try again.');
-                this.restartGame();
+                this.isGameRunning = false;
+                this.clearGameElements();
+                
+                const gameOverScreen = document.getElementById('gameOverScreen');
+                const gameOverText = document.getElementById('gameOverText');
+                const finalScore = document.getElementById('finalScore');
+                
+                if (this.currentLevel >= this.maxLevel && this.score >= this.maxLevel * 50) {
+                    gameOverText.textContent = '🎉 YOU WIN! 🎉';
+                } else {
+                    gameOverText.textContent = '💥 GAME OVER 💥';
+                }
+                
+                finalScore.textContent = `Final Score: ${this.score}`;
+                gameOverScreen.classList.add('show');
             }
 
-            restartGame() {
+            restart() {
                 this.currentLevel = 1;
                 this.score = 0;
                 this.lives = 3;
-                this.gameRunning = true;
+                this.isGameRunning = true;
+                this.isPaused = false;
+                this.isJumping = false;
                 
                 // Reset UI
                 document.getElementById('score').textContent = this.score;
                 document.getElementById('lives').textContent = this.lives;
-                document.getElementById('victoryScreen').classList.remove('show');
+                document.getElementById('gameOverScreen').classList.remove('show');
+                document.getElementById('pauseBtn').textContent = '⏸️ PAUSE';
                 
-                // Reset characters
-                Object.values(this.characters).forEach(char => {
-                    char.x = 100;
-                    char.y = window.innerHeight - 160;
-                    char.velocityX = 0;
-                    char.velocityY = 0;
-                    char.onGround = true;
-                    char.specialCooldown = 0;
-                });
+                // Reset character
+                this.character.classList.remove('jumping');
                 
-                this.setupLevel();
+                this.startLevel();
             }
 
             gameLoop() {
-                if (this.gameRunning) {
-                    this.handleInput();
-                    this.updatePhysics();
-                    this.updateEnemies();
-                    this.updateProjectiles();
+                if (this.isGameRunning && !this.isPaused) {
                     this.checkCollisions();
                 }
                 
@@ -875,27 +643,19 @@
             }
         }
 
-        // Global function for restart button
+        // Global variable for game instance
+        let game;
+
+        // Global restart function
         function restartGame() {
-            if (window.game) {
-                window.game.restartGame();
+            if (game) {
+                game.restart();
             }
         }
 
         // Initialize game when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            window.game = new Game();
-        });
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            if (window.game) {
-                // Adjust character positions if they're out of bounds
-                Object.values(window.game.characters).forEach(char => {
-                    char.x = Math.min(char.x, window.innerWidth - 60);
-                    char.y = Math.min(char.y, window.innerHeight - 160);
-                });
-            }
+            game = new AnimalRunGame();
         });
     </script>
 </body>
